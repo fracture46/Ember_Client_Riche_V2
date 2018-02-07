@@ -875,6 +875,63 @@ define('td1/helpers/bs-eq', ['exports', 'ember-bootstrap/helpers/bs-eq'], functi
     }
   });
 });
+define('td1/helpers/calcreduc', ['exports'], function (exports) {
+  'use strict';
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.calcreduc = calcreduc;
+
+  var _slicedToArray = function () {
+    function sliceIterator(arr, i) {
+      var _arr = [];
+      var _n = true;
+      var _d = false;
+      var _e = undefined;
+
+      try {
+        for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+          _arr.push(_s.value);
+
+          if (i && _arr.length === i) break;
+        }
+      } catch (err) {
+        _d = true;
+        _e = err;
+      } finally {
+        try {
+          if (!_n && _i["return"]) _i["return"]();
+        } finally {
+          if (_d) throw _e;
+        }
+      }
+
+      return _arr;
+    }
+
+    return function (arr, i) {
+      if (Array.isArray(arr)) {
+        return arr;
+      } else if (Symbol.iterator in Object(arr)) {
+        return sliceIterator(arr, i);
+      } else {
+        throw new TypeError("Invalid attempt to destructure non-iterable instance");
+      }
+    };
+  }();
+
+  function calcreduc(params /*, hash*/) {
+    var _params = _slicedToArray(params, 2),
+        valeur = _params[0],
+        reduc = _params[1];
+
+    var newval = valeur * reduc;
+    return newval;
+  }
+
+  exports.default = Ember.Helper.helper(calcreduc);
+});
 define('td1/helpers/cancel-all', ['exports', 'ember-concurrency/-helpers'], function (exports, _helpers) {
   'use strict';
 
@@ -889,13 +946,43 @@ define('td1/helpers/cancel-all', ['exports', 'ember-concurrency/-helpers'], func
   function cancelHelper(args) {
     var cancelable = args[0];
     if (!cancelable || typeof cancelable.cancelAll !== 'function') {
-      (true && !(false) && Ember.assert('The first argument passed to the `cancel-all` helper should be a Task or TaskGroup (without quotes); you passed ' + cancelable, false));
+      Ember.assert('The first argument passed to the `cancel-all` helper should be a Task or TaskGroup (without quotes); you passed ' + cancelable, false);
     }
 
     return (0, _helpers.taskHelperClosure)('cancel-all', 'cancelAll', [cancelable, CANCEL_REASON]);
   }
 
   exports.default = Ember.Helper.helper(cancelHelper);
+});
+define("td1/helpers/format-currency", ["exports"], function (exports) {
+  "use strict";
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.formatCurrency = formatCurrency;
+  function formatCurrency(value) {
+    value = parseFloat(value).toFixed(2);
+    var signe = "€";
+    return value + signe;
+  }
+
+  exports.default = Ember.Helper.helper(formatCurrency);
+});
+define("td1/helpers/format-percent", ["exports"], function (exports) {
+  "use strict";
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.formatPercent = formatPercent;
+  function formatPercent(value) {
+    var valeur = value;
+    var signe = "%";
+    return valeur + signe;
+  }
+
+  exports.default = Ember.Helper.helper(formatPercent);
 });
 define('td1/helpers/perform', ['exports', 'ember-concurrency/-helpers'], function (exports, _helpers) {
   'use strict';
@@ -909,6 +996,65 @@ define('td1/helpers/perform', ['exports', 'ember-concurrency/-helpers'], functio
   }
 
   exports.default = Ember.Helper.helper(performHelper);
+});
+define("td1/helpers/plural", ["exports"], function (exports) {
+  "use strict";
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.plural = plural;
+
+  var _slicedToArray = function () {
+    function sliceIterator(arr, i) {
+      var _arr = [];
+      var _n = true;
+      var _d = false;
+      var _e = undefined;
+
+      try {
+        for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+          _arr.push(_s.value);
+
+          if (i && _arr.length === i) break;
+        }
+      } catch (err) {
+        _d = true;
+        _e = err;
+      } finally {
+        try {
+          if (!_n && _i["return"]) _i["return"]();
+        } finally {
+          if (_d) throw _e;
+        }
+      }
+
+      return _arr;
+    }
+
+    return function (arr, i) {
+      if (Array.isArray(arr)) {
+        return arr;
+      } else if (Symbol.iterator in Object(arr)) {
+        return sliceIterator(arr, i);
+      } else {
+        throw new TypeError("Invalid attempt to destructure non-iterable instance");
+      }
+    };
+  }();
+
+  function plural(params) {
+    var _params = _slicedToArray(params, 4),
+        count = _params[0],
+        zero = _params[1],
+        un = _params[2],
+        plus = _params[3];
+
+    if (count == 0) return zero;
+    if (count == 1) return un;else return count + " " + plus;
+  }
+
+  exports.default = Ember.Helper.helper(plural);
 });
 define('td1/helpers/pluralize', ['exports', 'ember-inflector/lib/helpers/pluralize'], function (exports, _pluralize) {
   'use strict';
@@ -1192,8 +1338,9 @@ define('td1/routes/ex1', ['exports'], function (exports) {
     actions: {
       save: function save() {
         var model = this.modelFor(this.routeName);
-        if (model.get('content') != '') model.set('info', "Note enregistrée");
-        if (model.get('content') == '') model.set('info', "");
+        if (model.get('content') != '') model.set('info', 'Note enregistr\xE9e <b>$(model.get(\'content\'))</b>'); // les quotes AltGr+7 permettent de mettre
+        if (model.get('content') == '') //directement des variables avec $
+          model.set('info', "");
       },
       clear: function clear(model) {
         model.set('content', '');
@@ -1219,6 +1366,7 @@ define('td1/routes/ex1', ['exports'], function (exports) {
       return style;
     }),
     alertVisible: Ember.computed('info', function () {
+      //computed properties : le premier élément et ce sur quoi est fait la màj et le second est la fonction)
       var info = this.get('info');
       if (info != "") return true;
       if (info == "") return false;
@@ -1231,15 +1379,70 @@ define('td1/routes/ex2', ['exports'], function (exports) {
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.default = Ember.Route.extend({});
 
 
   var Service = Ember.Object.extend({
-    services: arrayOf,
-    init: function init(services) {
-      services = [];
-    }
+    countActive: Ember.computed('services.@each.active', function () {
+      return this.get('services').filterBy('active', true).length;
+    }),
+    sumActives: Ember.computed('services.@each.active', function () {
+      var service = this.get('services').filterBy('active', true);
+      var total = 0;
+      service.forEach(function (service) {
+        return total = total + service.price;
+      });
+      return total;
+    }),
+    txRemise: Ember.computed('promo', function () {
+      //promo = ce qui a été saisi dans le champ texte (voir model.promo sur graphique)
+      var promo = this.get('promo');
+      var promos = this.get('promos');
+      return promos[promo] || '';
+    }),
+    sumReduit: Ember.computed('services.@each.active', function () {
+      var montantReduction = this.get('txRemise');
+      var montantInitial = this.get('sumActives');
+      var montantDeduit = montantInitial * montantReduction;
+      return montantInitial - montantDeduit;
+    })
+  });
 
+  // taper debugger pour faire des points d'arrêts dans le script
+  // /!\ la console doit être ouverte pour que les points d'arrêts se déclenchent
+
+  exports.default = Ember.Route.extend({
+    model: function model() {
+      return Service.create({ services: [{
+          "name": "Web Development",
+          "price": 300,
+          "active": true
+        }, {
+          "name": "Design",
+          "price": 400,
+          "active": false
+        }, {
+          "name": "Integration",
+          "price": 250,
+          "active": true
+        }, {
+          "name": "Formation",
+          "price": 220,
+          "active": false
+        }],
+        promos: {
+          "B22": 0.05,
+          "AZ": 0.01,
+          "UBOAT": 0.02
+        }
+      });
+    },
+
+    actions: {
+      toggleActive: function toggleActive(service) {
+        Ember.set(service, 'active', !service.active);
+        //pas de set/get sur les objets JS, pour accéder aux set et get d'objets Ember, il faut passer par ce type de commande
+      }
+    }
   });
 });
 define("td1/routes/test", ["exports"], function (exports) {
@@ -1313,7 +1516,7 @@ define("td1/templates/ex2", ["exports"], function (exports) {
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.default = Ember.HTMLBars.template({ "id": "3HPVDifI", "block": "{\"symbols\":[],\"statements\":[[1,[18,\"outlet\"],false]],\"hasEval\":false}", "meta": { "moduleName": "td1/templates/ex2.hbs" } });
+  exports.default = Ember.HTMLBars.template({ "id": "IGqqCKIJ", "block": "{\"symbols\":[\"service\"],\"statements\":[[6,\"div\"],[9,\"class\",\"list-group\"],[7],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"list-group-item\"],[7],[0,\"\\n    \"],[6,\"div\"],[9,\"class\",\"list-group-item-heading\"],[7],[0,\"\\n      \"],[1,[25,\"plural\",[[20,[\"model\",\"countActive\"]],\"aucun service sélectionné\",\"un service sélectionné\",\"services sélectionnés\"],null],false],[0,\"\\n    \"],[8],[0,\"\\n  \"],[8],[0,\"\\n\"],[4,\"each\",[[20,[\"model\",\"services\"]]],null,{\"statements\":[[0,\"  \"],[6,\"div\"],[10,\"class\",[26,[\"list-groupe-item\\n    \",[25,\"if\",[[19,1,[\"active\"]],\"active\",\"\"],null]]]],[3,\"action\",[[19,0,[]],\"toggleActive\",[19,1,[]]]],[7],[0,\"\\n    \"],[1,[19,1,[\"name\"]],false],[0,\"\\n    \"],[6,\"span\"],[9,\"class\",\"label label-default\"],[9,\"class\",\"badge\"],[7],[1,[25,\"format-currency\",[[19,1,[\"price\"]]],null],false],[8],[0,\"\\n  \"],[8],[0,\"\\n\"]],\"parameters\":[1]},null],[0,\"  \"],[6,\"div\"],[9,\"class\",\"list-group-item-item list-group-item-info\"],[7],[0,\"\\n    \"],[6,\"span\"],[9,\"class\",\"badge\"],[7],[0,\" total : \"],[1,[25,\"format-currency\",[[20,[\"model\",\"sumActives\"]]],null],false],[8],[0,\"\\n  \"],[8],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"list-groupe-item\"],[7],[0,\"\\n    \"],[6,\"div\"],[9,\"class\",\"input-group\"],[7],[0,\"\\n      \"],[6,\"span\"],[9,\"class\",\"input-group-addon\"],[7],[0,\"\\n        \"],[6,\"input\"],[9,\"type\",\"checkbox\"],[9,\"aria-label\",\"...\"],[7],[8],[0,\"\\n      \"],[8],[0,\"\\n     \"],[1,[25,\"input\",null,[[\"value\",\"type\"],[[20,[\"model\",\"promo\"]],\"text\"]]],false],[0,\"\\n    \"],[8],[0,\"\\n  \"],[8],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"list-groupe-item\"],[7],[0,\"\\n    \"],[1,[25,\"format-percent\",[[20,[\"model\",\"txRemise\"]]],null],false],[0,\"\\n  \"],[8],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"list-groupe-item\"],[7],[0,\"\\n    Montant de la réduction \"],[1,[25,\"format-currency\",[[25,\"calcreduc\",[[20,[\"model\",\"sumActives\"]],[20,[\"model\",\"txRemise\"]]],null]],null],false],[0,\"\\n  \"],[8],[0,\"\\n  \"],[6,\"div\"],[9,\"class\",\"list-groupe-item\"],[7],[0,\"\\n    Montant final \"],[1,[25,\"format-currency\",[[20,[\"model\",\"sumReduit\"]]],null],false],[0,\"\\n  \"],[8],[0,\"\\n\"],[8],[0,\"\\n\\n\"],[1,[18,\"outlet\"],false]],\"hasEval\":false}", "meta": { "moduleName": "td1/templates/ex2.hbs" } });
 });
 define("td1/templates/test", ["exports"], function (exports) {
   "use strict";
@@ -1353,6 +1556,6 @@ catch(err) {
 });
 
 if (!runningTests) {
-  require("td1/app")["default"].create({"name":"td1","version":"0.0.0+ddf63af4"});
+  require("td1/app")["default"].create({"name":"td1","version":"0.0.0+9b67ae29"});
 }
 //# sourceMappingURL=td1.map

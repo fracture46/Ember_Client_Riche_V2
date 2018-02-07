@@ -44,6 +44,7 @@ const Note = EmberObject.extend({
     return style;
   }),
   alertVisible: computed('info', function(){
+    //computed properties : le premier élément et ce sur quoi est fait la màj et le second est la fonction)
     let info = this.get('info');
     if(info != "")
       return true;

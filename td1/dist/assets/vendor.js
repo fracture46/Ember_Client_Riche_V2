@@ -68717,7 +68717,7 @@ createDeprecatedModule('resolver');
     });
   }
 });
-;define('@ember-decorators/argument/-debug/index', ['exports', '@ember-decorators/argument/-debug/decorators/immutable', '@ember-decorators/argument/-debug/decorators/required', '@ember-decorators/argument/-debug/decorators/type', '@ember-decorators/argument/-debug/helpers/array-of', '@ember-decorators/argument/-debug/helpers/shape-of', '@ember-decorators/argument/-debug/helpers/union-of', '@ember-decorators/argument/-debug/helpers/optional', '@ember-decorators/argument/-debug/errors', '@ember-decorators/argument/-debug/utils/validation-decorator'], function (exports, _immutable, _required, _type, _arrayOf, _shapeOf, _unionOf, _optional, _errors, _validationDecorator) {
+;define('@ember-decorators/argument/-debug/index', ['exports', '@ember-decorators/argument/-debug/decorators/immutable', '@ember-decorators/argument/-debug/decorators/required', '@ember-decorators/argument/-debug/decorators/type', '@ember-decorators/argument/-debug/helpers/array-of', '@ember-decorators/argument/-debug/helpers/shape-of', '@ember-decorators/argument/-debug/helpers/union-of', '@ember-decorators/argument/-debug/helpers/optional', '@ember-decorators/argument/-debug/errors', '@ember-decorators/argument/-debug/utils/validations-for'], function (exports, _immutable, _required, _type, _arrayOf, _shapeOf, _unionOf, _optional, _errors, _validationsFor) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
@@ -68783,10 +68783,10 @@ createDeprecatedModule('resolver');
       return _errors.TypeError;
     }
   });
-  Object.defineProperty(exports, 'validationDecorator', {
+  Object.defineProperty(exports, 'getValidationsForKey', {
     enumerable: true,
     get: function () {
-      return _validationDecorator.default;
+      return _validationsFor.getValidationsForKey;
     }
   });
 });
@@ -68796,7 +68796,6 @@ createDeprecatedModule('resolver');
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.makeComputed = makeComputed;
   exports.isMandatorySetter = isMandatorySetter;
   exports.isDescriptor = isDescriptor;
   exports.isDescriptorTrap = isDescriptorTrap;
@@ -68806,24 +68805,6 @@ createDeprecatedModule('resolver');
   } : function (obj) {
     return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
   };
-
-  function makeComputed(desc) {
-    if (true) {
-      return Ember.computed(desc);
-    } else {
-      var get = desc.get,
-          set = desc.set;
-
-
-      return Ember.computed(function (key, value) {
-        if (arguments.length > 1) {
-          return set.call(this, key, value);
-        }
-
-        return get.call(this);
-      });
-    }
-  }
 
   function isMandatorySetter(setter) {
     return setter && setter.toString().match('You must use .*set()') !== null;
@@ -68858,153 +68839,301 @@ createDeprecatedModule('resolver');
   });
   exports.default = validationDecorator;
 
+  var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
+    return typeof obj;
+  } : function (obj) {
+    return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+  };
 
-  function defineWrappedProperty(instance, key, isComputed, isAlias, desc) {
-    var wrappedComputed = (0, _computed.makeComputed)(desc);
-
-    // Aliases don't cache, instead they proxy directly to another property.
-    // Non-computeds are "volatile" by nature, so we must always recompute.
-    if (!isComputed || isAlias) {
-      wrappedComputed.volatile();
+  function _possibleConstructorReturn(self, call) {
+    if (!self) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
     }
 
-    // Mark the computed as an alias in case it gets consumed by future validated properties
-    wrappedComputed.altKey = isAlias;
-
-    // Explicitly redefine the property to ensure that we will be able to use Ember.defineProperty later
-    Object.defineProperty(instance, key, {
-      configurable: true,
-      writable: true,
-      enumerable: true,
-      value: undefined
-    });
-
-    Ember.defineProperty(instance, key, wrappedComputed);
+    return call && (typeof call === "object" || typeof call === "function") ? call : self;
   }
 
-  function runValidators(validators, constructor, key, value, phase) {
+  function _inherits(subClass, superClass) {
+    if (typeof superClass !== "function" && superClass !== null) {
+      throw new _errors.TypeError("Super expression must either be null or a function, not " + typeof superClass);
+    }
+
+    subClass.prototype = Object.create(superClass && superClass.prototype, {
+      constructor: {
+        value: subClass,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+    if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+  }
+
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new _errors.TypeError("Cannot call a class as a function");
+    }
+  }
+
+  function guardBind(fn) {
+    if (typeof fn === 'function') {
+      for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+        args[_key - 1] = arguments[_key];
+      }
+
+      return fn.bind.apply(fn, args);
+    }
+  }
+
+  var ValidatedProperty = function () {
+    function ValidatedProperty(_ref) {
+      var originalValue = _ref.originalValue,
+          klass = _ref.klass,
+          keyName = _ref.keyName,
+          isImmutable = _ref.isImmutable,
+          typeValidators = _ref.typeValidators;
+
+      _classCallCheck(this, ValidatedProperty);
+
+      this.isDescriptor = true;
+
+      this.klass = klass;
+      this.originalValue = originalValue;
+      this.isImmutable = isImmutable;
+      this.typeValidators = typeValidators;
+
+      runValidators(typeValidators, constructor, keyName, originalValue, 'init');
+    }
+
+    ValidatedProperty.prototype.get = function get(obj, keyName) {
+      var klass = this.klass,
+          originalValue = this.originalValue,
+          isImmutable = this.isImmutable,
+          typeValidators = this.typeValidators;
+
+
+      var newValue = this._get(obj, keyName);
+
+      if (isImmutable && newValue !== originalValue) {
+        throw new _errors.MutabilityError('Immutable value ' + klass + '#' + keyName + ' changed by underlying computed, original value: ' + originalValue + ', new value: ' + newValue);
+      }
+
+      if (typeValidators.length > 0) {
+        runValidators(typeValidators, klass, keyName, newValue, 'get');
+      }
+
+      return newValue;
+    };
+
+    ValidatedProperty.prototype.set = function set(obj, keyName, value) {
+      var klass = this.klass,
+          isImmutable = this.isImmutable,
+          typeValidators = this.typeValidators;
+
+
+      if (isImmutable) {
+        throw new _errors.MutabilityError('Attempted to set ' + klass + '#' + keyName + ' to the value ' + value + ' but the field is immutable');
+      }
+
+      var newValue = this._set(obj, keyName, value);
+
+      if (typeValidators.length > 0) {
+        runValidators(typeValidators, klass, keyName, newValue, 'set');
+      }
+
+      return newValue;
+    };
+
+    return ValidatedProperty;
+  }();
+
+  var StandardValidatedProperty = function (_ValidatedProperty) {
+    _inherits(StandardValidatedProperty, _ValidatedProperty);
+
+    function StandardValidatedProperty(_ref2) {
+      var originalValue = _ref2.originalValue;
+
+      _classCallCheck(this, StandardValidatedProperty);
+
+      var _this = _possibleConstructorReturn(this, _ValidatedProperty.apply(this, arguments));
+
+      _this.cachedValue = originalValue;
+      return _this;
+    }
+
+    StandardValidatedProperty.prototype._get = function _get() {
+      return this.cachedValue;
+    };
+
+    StandardValidatedProperty.prototype._set = function _set(obj, keyName, value) {
+      if (value === this.cachedValue) return value;
+
+      this.cachedValue = value;
+
+      Ember.propertyDidChange(obj, keyName);
+
+      return this.cachedValue;
+    };
+
+    return StandardValidatedProperty;
+  }(ValidatedProperty);
+
+  var NativeComputedValidatedProperty = function (_ValidatedProperty2) {
+    _inherits(NativeComputedValidatedProperty, _ValidatedProperty2);
+
+    function NativeComputedValidatedProperty(_ref3) {
+      var desc = _ref3.desc;
+
+      _classCallCheck(this, NativeComputedValidatedProperty);
+
+      var _this2 = _possibleConstructorReturn(this, _ValidatedProperty2.apply(this, arguments));
+
+      _this2.desc = desc;
+      return _this2;
+    }
+
+    NativeComputedValidatedProperty.prototype._get = function _get(obj) {
+      return this.desc.get.call(obj);
+    };
+
+    NativeComputedValidatedProperty.prototype._set = function _set(obj, keyName, value) {
+      // By default Ember.get will check to see if the value has changed before setting
+      // and calling propertyDidChange. In order to not change behavior, we must do the same
+      var currentValue = this._get(obj);
+
+      if (value === currentValue) return value;
+
+      this.desc.set.call(obj, value);
+
+      Ember.propertyDidChange(obj, keyName);
+
+      return this._get(obj);
+    };
+
+    return NativeComputedValidatedProperty;
+  }(ValidatedProperty);
+
+  var ComputedValidatedProperty = function (_ValidatedProperty3) {
+    _inherits(ComputedValidatedProperty, _ValidatedProperty3);
+
+    function ComputedValidatedProperty(_ref4) {
+      var desc = _ref4.desc;
+
+      _classCallCheck(this, ComputedValidatedProperty);
+
+      var _this3 = _possibleConstructorReturn(this, _ValidatedProperty3.apply(this, arguments));
+
+      _this3.desc = desc;
+
+      _this3.setup = guardBind(desc.setup, desc);
+      _this3.teardown = guardBind(desc.teardown, desc);
+      _this3.willChange = guardBind(desc.willChange, desc);
+      _this3.didChange = guardBind(desc.didChange, desc);
+      _this3.willWatch = guardBind(desc.willWatch, desc);
+      _this3.didUnwatch = guardBind(desc.didUnwatch, desc);
+      return _this3;
+    }
+
+    ComputedValidatedProperty.prototype._get = function _get(obj, keyName) {
+      return this.desc.get(obj, keyName);
+    };
+
+    ComputedValidatedProperty.prototype._set = function _set(obj, keyName, value) {
+      if (true) {
+        return this.desc.set(obj, keyName, value);
+      }
+
+      this.desc.set(obj, keyName, value);
+
+      var _Ember$meta = Ember.meta(obj),
+          cache = _Ember$meta.cache;
+
+      return (typeof cache === 'undefined' ? 'undefined' : _typeof(cache)) === 'object' ? cache[keyName] : value;
+    };
+
+    return ComputedValidatedProperty;
+  }(ValidatedProperty);
+
+  function runValidators(validators, klass, key, value, phase) {
     validators.forEach(function (validator) {
       if (validator(value) === false) {
-        throw new _errors.TypeError(constructor + '#' + key + ' expected value of type ' + validator + ' during \'' + phase + '\', but received: ' + value);
+        throw new _errors.TypeError(klass + '#' + key + ' expected value of type ' + validator + ' during \'' + phase + '\', but received: ' + value);
       }
     });
   }
 
-  function wrapField(constructor, instance, validations, key) {
-    var _validations$key = validations[key],
-        isImmutable = _validations$key.isImmutable,
-        isRequired = _validations$key.isRequired,
-        typeValidators = _validations$key.typeValidators,
-        typeRequired = _validations$key.typeRequired;
+  function wrapField(klass, instance, validations, keyName) {
+    var _validations$keyName = validations[keyName],
+        isImmutable = _validations$keyName.isImmutable,
+        isRequired = _validations$keyName.isRequired,
+        typeValidators = _validations$keyName.typeValidators,
+        typeRequired = _validations$keyName.typeRequired;
 
 
-    if (isRequired && instance[key] === undefined && !instance.hasOwnProperty(key)) {
-      throw new _errors.RequiredFieldError(constructor + ' requires a \'' + key + '\' argument to be passed in when using the component');
+    if (isRequired && instance[keyName] === undefined && !instance.hasOwnProperty(keyName)) {
+      throw new _errors.RequiredFieldError(klass + ' requires a \'' + keyName + '\' argument to be passed in when using the component');
     }
 
-    var _getPropertyDescripto = (0, _object.getPropertyDescriptor)(instance, key),
-        originalGet = _getPropertyDescripto.get,
-        originalSet = _getPropertyDescripto.set,
-        cachedValue = _getPropertyDescripto.value;
+    // opt out early if no further validations
+    if (!isImmutable && typeValidators.length === 0) {
+      if (typeValidators.length === 0 && typeRequired) {
+        throw new _errors.TypeError(klass + '#' + keyName + ' requires a type, add one using the @type decorator');
+      }
 
-    var originalValue = instance[key];
+      return;
+    }
 
-    var isComputed = false;
     var meta = Ember.meta(instance);
 
+    var originalValue = instance[keyName];
+
     if (meta.peekDescriptors) {
-      var computedDescriptor = meta.peekDescriptors(key);
-      isComputed = !!computedDescriptor;
+      var possibleDesc = meta.peekDescriptors(keyName);
 
-      cachedValue = isComputed ? computedDescriptor : cachedValue;
-    } else if ((0, _computed.isDescriptorTrap)(originalValue)) {
-      isComputed = true;
-
-      cachedValue = originalValue.__DESCRIPTOR__;
-    } else {
-      isComputed = (0, _computed.isDescriptor)(cachedValue);
+      if (possibleDesc !== undefined) {
+        originalValue = possibleDesc;
+      }
     }
 
-    var isAlias = isComputed && !!cachedValue.altKey;
-    var getter = void 0,
-        setter = void 0;
-
-    if (isComputed) {
-      getter = cachedValue.get.bind(cachedValue, instance, key);
-      setter = cachedValue.set.bind(cachedValue, instance, key);
-    } else if ((typeof originalGet === 'function' || typeof originalSet === 'function') && !(0, _computed.isMandatorySetter)(originalSet)) {
-      getter = originalGet ? originalGet.bind(instance) : function () {
-        throw new Error('attempted to get a property without a getter');
-      };
-      setter = originalSet ? originalSet.bind(instance) : function () {
-        throw new Error('attempted to set a property without a setter');
-      };
-    } else {
-      // Reset the cached value to get the true initial value of the field
-      cachedValue = originalValue;
-
-      getter = function getter() {
-        return cachedValue;
-      };
-      setter = function setter(value) {
-        return cachedValue = value;
-      };
+    if ((0, _computed.isDescriptorTrap)(originalValue)) {
+      originalValue = originalValue.__DESCRIPTOR__;
     }
 
-    // get the true original value again (finalize any computeds)
-    originalValue = getter();
+    var validatedProperty = void 0;
 
-    if (typeValidators.length > 0) {
-      runValidators(typeValidators, constructor, key, originalValue, 'init');
-    } else if (typeRequired) {
-      throw new _errors.TypeError(constructor + '#' + key + ' requires a type, add one using the @type decorator');
-    }
+    if ((0, _computed.isDescriptor)(originalValue)) {
+      var desc = originalValue;
 
-    if (isImmutable) {
-      defineWrappedProperty(instance, key, isComputed, isAlias, {
-        get: function get() {
-          var newValue = getter();
+      originalValue = desc.get(instance, keyName);
 
-          if (newValue !== originalValue) {
-            throw new _errors.MutabilityError('Immutable value ' + constructor + '#' + key + ' changed by underlying computed, original value: ' + originalValue + ', new value: ' + newValue);
-          }
-
-          return newValue;
-        },
-        set: function set(key, value) {
-          throw new _errors.MutabilityError('Attempted to set ' + constructor + '#' + key + ' to the value ' + value + ' but the field is immutable');
-        }
+      validatedProperty = new ComputedValidatedProperty({
+        desc: desc, isImmutable: isImmutable, keyName: keyName, klass: klass, originalValue: originalValue, typeValidators: typeValidators
       });
-    } else if (typeValidators.length > 0) {
-      defineWrappedProperty(instance, key, isComputed, isAlias, {
-        get: function get() {
-          var newValue = getter();
+    } else {
+      var _desc = (0, _object.getPropertyDescriptor)(instance, keyName);
 
-          runValidators(typeValidators, constructor, key, newValue, 'get');
-
-          return newValue;
-        },
-        set: function set(key, value) {
-          runValidators(typeValidators, constructor, key, value, 'set');
-
-          // Legacy Ember does not return the value from ComputedProperty.set calls,
-          // so we have to side-effect and return the value directly
-          setter(value);
-
-          // Volatile computeds cannot be watched (they never trigger `propertyDidChange`)
-          // in Ember 2 so we need to trigger it manually in the case where we're proxying
-          // to a simple value/getter/setter
-          if (true && (!isComputed || isAlias)) {
-            Ember.propertyDidChange(instance, key);
-          }
-
-          return value;
-        }
-      });
+      if ((typeof _desc.get === 'function' || typeof _desc.set === 'function') && !(0, _computed.isMandatorySetter)(_desc.set)) {
+        validatedProperty = new NativeComputedValidatedProperty({
+          desc: _desc, isImmutable: isImmutable, keyName: keyName, klass: klass, originalValue: originalValue, typeValidators: typeValidators
+        });
+      } else {
+        validatedProperty = new StandardValidatedProperty({
+          isImmutable: isImmutable, keyName: keyName, klass: klass, originalValue: originalValue, typeValidators: typeValidators
+        });
+      }
     }
+
+    // We're trying to fly under the radar here, so don't use Ember.defineProperty.
+    // Ember should think the property is completely unchanged.
+    Object.defineProperty(instance, keyName, {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value: validatedProperty
+    });
   }
 
-  var validatingCreateMixin = {
+  var ValidatingCreateMixin = Ember.Mixin.create({
     create: function create() {
       var instance = this._super.apply(this, arguments);
 
@@ -69022,24 +69151,35 @@ createDeprecatedModule('resolver');
 
       return instance;
     }
-  };
+  });
 
-  Ember.Object.reopenClass(validatingCreateMixin);
-  Ember.Component.reopenClass(validatingCreateMixin);
-  Ember.Controller.reopenClass(validatingCreateMixin);
-  Ember.Service.reopenClass(validatingCreateMixin);
+  Ember.Object.reopenClass(ValidatingCreateMixin);
+
+  // Reopening a parent class does not apply the mixin to existing child classes,
+  // so we need to apply it directly
+  ValidatingCreateMixin.apply(Ember.Component);
+  ValidatingCreateMixin.apply(Ember.Service);
+  ValidatingCreateMixin.apply(Ember.Controller);
+
+  if (window.DS !== undefined && window.DS.Model !== undefined) {
+    ValidatingCreateMixin.apply(window.DS.Model);
+  }
 
   function validationDecorator(fn) {
     return function (target, key, desc, options) {
       var validations = (0, _validationsFor.getValidationsForKey)(target, key);
 
-      // always ensure the property is writeable, doesn't make sense otherwise (babel bug?)
-      desc.writable = true;
-      desc.configurable = true;
-
       fn(target, key, desc, options, validations);
 
-      if (desc.initializer === null) desc.initializer = undefined;
+      if (!desc.get && !desc.set) {
+        // always ensure the property is writeable, doesn't make sense otherwise (babel bug?)
+        desc.writable = true;
+        desc.configurable = true;
+      }
+
+      if (desc.initializer === null) {
+        desc.initializer = undefined;
+      }
     };
   }
 });
@@ -69246,32 +69386,6 @@ createDeprecatedModule('resolver');
 
   exports.default = validatedComponent;
 });
-;define("@ember-decorators/argument/-private/initializers-meta", ["exports"], function (exports) {
-  "use strict";
-
-  Object.defineProperty(exports, "__esModule", {
-    value: true
-  });
-  exports.getOrCreateInitializersFor = getOrCreateInitializersFor;
-  exports.getInitializersFor = getInitializersFor;
-  var initializersMap = new WeakMap();
-
-  function getOrCreateInitializersFor(target) {
-    if (!initializersMap.has(target)) {
-      var parentInitializers = getInitializersFor(Object.getPrototypeOf(target));
-      initializersMap.set(target, Object.create(parentInitializers || null));
-    }
-
-    return initializersMap.get(target);
-  }
-
-  function getInitializersFor(target) {
-    // Reached the root of the prototype chain
-    if (target === null) return target;
-
-    return initializersMap.get(target) || getInitializersFor(Object.getPrototypeOf(target));
-  }
-});
 ;define('@ember-decorators/argument/errors', ['exports', '@ember-decorators/argument/-debug'], function (exports, _debug) {
   'use strict';
 
@@ -69297,7 +69411,7 @@ createDeprecatedModule('resolver');
     }
   });
 });
-;define('@ember-decorators/argument/index', ['exports', 'ember-get-config', '@ember-decorators/argument/-private/initializers-meta', '@ember-decorators/argument/-debug'], function (exports, _emberGetConfig, _initializersMeta, _debug) {
+;define('@ember-decorators/argument/index', ['exports', 'ember-get-config', '@ember-decorators/argument/utils/make-computed', '@ember-decorators/argument/-debug'], function (exports, _emberGetConfig, _makeComputed, _debug) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
@@ -69311,8 +69425,19 @@ createDeprecatedModule('resolver');
     return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
   };
 
-  var internalArgumentDecorator = function internalArgumentDecorator(target, key, desc, options, validations) {
+  var valueMap = new WeakMap();
+
+  function valuesFor(obj) {
+    if (!valueMap.has(obj)) {
+      valueMap.set(obj, Object.create(null));
+    }
+
+    return valueMap.get(obj);
+  }
+
+  var internalArgumentDecorator = function internalArgumentDecorator(target, key, desc, options) {
     if (true) {
+      var validations = (0, _debug.getValidationsForKey)(target, key);
       validations.isArgument = true;
       validations.typeRequired = Ember.getWithDefault(_emberGetConfig.default, '@ember-decorators/argument.typeRequired', false);
     }
@@ -69326,28 +69451,58 @@ createDeprecatedModule('resolver');
       return;
     }
 
-    var initializers = (0, _initializersMeta.getOrCreateInitializersFor)(target);
-    initializers[key] = desc.initializer;
+    var initializer = desc.initializer;
 
-    desc.initializer = function () {
-      var initializers = (0, _initializersMeta.getInitializersFor)(Object.getPrototypeOf(this));
-      var initializer = initializers[key];
+    var get = function get() {
+      var values = valuesFor(this);
 
-      var value = this[key];
-
-      var shouldInitialize = options.defaultIfUndefined ? value === undefined : this.hasOwnProperty(key) === false;
-
-      if (shouldInitialize) {
-        value = initializer.call(this);
+      if (!Object.hasOwnProperty.call(values, key)) {
+        values[key] = initializer.call(this);
       }
 
-      return value;
+      return values[key];
     };
-  };
 
-  if (true) {
-    internalArgumentDecorator = (0, _debug.validationDecorator)(internalArgumentDecorator);
-  }
+    if (options.defaultIfNullish === true || options.defaultIfUndefined === true) {
+      var defaultIf = void 0;
+
+      if (options.defaultIfNullish === true) {
+        defaultIf = function defaultIf(v) {
+          return v === undefined || v === null;
+        };
+      } else {
+        defaultIf = function defaultIf(v) {
+          return v === undefined;
+        };
+      }
+
+      var descriptor = (0, _makeComputed.default)({
+        get: get,
+        set: function set(keyName, value) {
+          if (defaultIf(value)) {
+            return valuesFor(this)[key] = initializer.call(this);
+          } else {
+            return valuesFor(this)[key] = value;
+          }
+        }
+      });
+
+      // Decorators spec doesn't allow us to make a computed directly on
+      // the prototype, so we need to wrap the descriptor in a getter
+      return {
+        get: function get() {
+          return descriptor;
+        }
+      };
+    } else {
+      return {
+        get: get,
+        set: function set(value) {
+          valuesFor(this)[key] = value;
+        }
+      };
+    }
+  };
 
   function argument(maybeOptions, maybeKey, maybeDesc) {
     if (typeof maybeKey === 'string' && (typeof maybeDesc === 'undefined' ? 'undefined' : _typeof(maybeDesc)) === 'object') {
@@ -69433,6 +69588,31 @@ createDeprecatedModule('resolver');
   var Node = exports.Node = window ? window.Node : function Node() {
     _classCallCheck(this, Node);
   };
+});
+;define('@ember-decorators/argument/utils/make-computed', ['exports'], function (exports) {
+  'use strict';
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = makeComputed;
+  function makeComputed(desc) {
+    if (true) {
+      return Ember.computed(desc);
+    } else {
+      var get = desc.get,
+          set = desc.set;
+
+
+      return Ember.computed(function (key, value) {
+        if (arguments.length > 1) {
+          return set.call(this, key, value);
+        }
+
+        return get.call(this);
+      });
+    }
+  }
 });
 ;define('@ember-decorators/argument/validation', ['exports', '@ember-decorators/argument/-debug'], function (exports, _debug) {
   'use strict';
@@ -84697,7 +84877,7 @@ createDeprecatedModule('resolver');
 
   var Selector = (0, _type.unionOf)('string', _types.Element);
 
-  var EmberPopperBase = (_dec = (0, _component.tagName)(''), _dec2 = (0, _argument.argument)({ defaultIfUndefined: true }), _dec3 = (0, _type.type)('boolean'), _dec4 = (0, _type.type)((0, _type.optional)('object')), _dec5 = (0, _type.type)((0, _type.optional)(_types.Action)), _dec6 = (0, _type.type)((0, _type.optional)(Function)), _dec7 = (0, _type.type)((0, _type.optional)(Function)), _dec8 = (0, _argument.argument)({ defaultIfUndefined: true }), _dec9 = (0, _type.type)('string'), _dec10 = (0, _argument.argument)({ defaultIfUndefined: true }), _dec11 = (0, _type.type)(Selector), _dec12 = (0, _type.type)((0, _type.optional)(Selector)), _dec13 = (0, _argument.argument)({ defaultIfUndefined: true }), _dec14 = (0, _type.type)('boolean'), _dec15 = (0, _object.computed)('_renderInPlace', 'popperContainer'), _dec16 = (0, _object.computed)('renderInPlace'), _dec(_class = (_class2 = function (_Component) {
+  var EmberPopperBase = (_dec = (0, _component.tagName)(''), _dec2 = (0, _argument.argument)({ defaultIfUndefined: true }), _dec3 = (0, _type.type)('boolean'), _dec4 = (0, _type.type)((0, _type.optional)('object')), _dec5 = (0, _type.type)((0, _type.optional)(Function)), _dec6 = (0, _type.type)((0, _type.optional)(Function)), _dec7 = (0, _argument.argument)({ defaultIfUndefined: true }), _dec8 = (0, _type.type)('string'), _dec9 = (0, _argument.argument)({ defaultIfUndefined: true }), _dec10 = (0, _type.type)(Selector), _dec11 = (0, _type.type)((0, _type.optional)(Selector)), _dec12 = (0, _type.type)((0, _type.optional)(_types.Action)), _dec13 = (0, _argument.argument)({ defaultIfUndefined: true }), _dec14 = (0, _type.type)('boolean'), _dec15 = (0, _object.computed)('_renderInPlace', 'popperContainer'), _dec16 = (0, _object.computed)('renderInPlace'), _dec(_class = (_class2 = function (_Component) {
     _inherits(EmberPopperBase, _Component);
 
     function EmberPopperBase() {
@@ -84711,7 +84891,7 @@ createDeprecatedModule('resolver');
         args[_key] = arguments[_key];
       }
 
-      return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = EmberPopperBase.__proto__ || Object.getPrototypeOf(EmberPopperBase)).call.apply(_ref, [this].concat(args))), _this), _this.layout = _emberPopper.default, _initDefineProp(_this, 'eventsEnabled', _descriptor, _this), _initDefineProp(_this, 'modifiers', _descriptor2, _this), _initDefineProp(_this, 'registerAPI', _descriptor3, _this), _initDefineProp(_this, 'onCreate', _descriptor4, _this), _initDefineProp(_this, 'onUpdate', _descriptor5, _this), _initDefineProp(_this, 'placement', _descriptor6, _this), _initDefineProp(_this, 'popperContainer', _descriptor7, _this), _initDefineProp(_this, 'popperTarget', _descriptor8, _this), _initDefineProp(_this, 'renderInPlace', _descriptor9, _this), _this._popper = null, _this._initialParentNode = null, _this._didRenderInPlace = false, _this._popperTarget = null, _this._eventsEnabled = null, _this._placement = null, _this._modifiers = null, _this._updateRAF = null, _this._onCreate = null, _this._onUpdate = null, _this._publicAPI = null, _temp), _possibleConstructorReturn(_this, _ret);
+      return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = EmberPopperBase.__proto__ || Object.getPrototypeOf(EmberPopperBase)).call.apply(_ref, [this].concat(args))), _this), _this.layout = _emberPopper.default, _initDefineProp(_this, 'eventsEnabled', _descriptor, _this), _initDefineProp(_this, 'modifiers', _descriptor2, _this), _initDefineProp(_this, 'onCreate', _descriptor3, _this), _initDefineProp(_this, 'onUpdate', _descriptor4, _this), _initDefineProp(_this, 'placement', _descriptor5, _this), _initDefineProp(_this, 'popperContainer', _descriptor6, _this), _initDefineProp(_this, 'popperTarget', _descriptor7, _this), _initDefineProp(_this, 'registerAPI', _descriptor8, _this), _initDefineProp(_this, 'renderInPlace', _descriptor9, _this), _this._didRenderInPlace = false, _this._eventsEnabled = null, _this._initialParentNode = null, _this._modifiers = null, _this._onCreate = null, _this._onUpdate = null, _this._placement = null, _this._popper = null, _this._popperTarget = null, _this._publicAPI = null, _this._updateRAF = null, _temp), _possibleConstructorReturn(_this, _ret);
     }
 
     _createClass(EmberPopperBase, [{
@@ -84763,13 +84943,13 @@ createDeprecatedModule('resolver');
           return;
         }
 
-        var popperTarget = this._getPopperTarget();
-        var renderInPlace = this.get('_renderInPlace');
         var eventsEnabled = this.get('eventsEnabled');
         var modifiers = this.get('modifiers');
-        var placement = this.get('placement');
         var onCreate = this.get('onCreate');
         var onUpdate = this.get('onUpdate');
+        var placement = this.get('placement');
+        var popperTarget = this._getPopperTarget();
+        var renderInPlace = this.get('_renderInPlace');
 
         // Compare against previous values to see if anything has changed
         var didChange = renderInPlace !== this._didRenderInPlace || popperTarget !== this._popperTarget || eventsEnabled !== this._eventsEnabled || modifiers !== this._modifiers || placement !== this._placement || onCreate !== this._onCreate || onUpdate !== this._onUpdate;
@@ -84783,12 +84963,12 @@ createDeprecatedModule('resolver');
 
           // Store current values to check against on updates
           this._didRenderInPlace = renderInPlace;
-          this._popperTarget = popperTarget;
           this._eventsEnabled = eventsEnabled;
           this._modifiers = modifiers;
-          this._placement = placement;
           this._onCreate = onCreate;
           this._onUpdate = onUpdate;
+          this._placement = placement;
+          this._popperTarget = popperTarget;
 
           var options = {
             eventsEnabled: eventsEnabled,
@@ -84851,10 +85031,10 @@ createDeprecatedModule('resolver');
           // bootstrap the public API with fields that are guaranteed to be static,
           // such as imperative actions
           this._publicAPI = {
-            update: this.update.bind(this),
-            scheduleUpdate: this.scheduleUpdate.bind(this),
+            disableEventListeners: this.disableEventListeners.bind(this),
             enableEventListeners: this.enableEventListeners.bind(this),
-            disableEventListeners: this.disableEventListeners.bind(this)
+            scheduleUpdate: this.scheduleUpdate.bind(this),
+            update: this.update.bind(this)
           };
         }
 
@@ -84907,32 +85087,32 @@ createDeprecatedModule('resolver');
     initializer: function initializer() {
       return null;
     }
-  }), _descriptor3 = _applyDecoratedDescriptor(_class2.prototype, 'registerAPI', [_argument.argument, _dec5], {
+  }), _descriptor3 = _applyDecoratedDescriptor(_class2.prototype, 'onCreate', [_argument.argument, _dec5], {
     enumerable: true,
     initializer: function initializer() {
       return null;
     }
-  }), _descriptor4 = _applyDecoratedDescriptor(_class2.prototype, 'onCreate', [_argument.argument, _dec6], {
+  }), _descriptor4 = _applyDecoratedDescriptor(_class2.prototype, 'onUpdate', [_argument.argument, _dec6], {
     enumerable: true,
     initializer: function initializer() {
       return null;
     }
-  }), _descriptor5 = _applyDecoratedDescriptor(_class2.prototype, 'onUpdate', [_argument.argument, _dec7], {
-    enumerable: true,
-    initializer: function initializer() {
-      return null;
-    }
-  }), _descriptor6 = _applyDecoratedDescriptor(_class2.prototype, 'placement', [_dec8, _dec9], {
+  }), _descriptor5 = _applyDecoratedDescriptor(_class2.prototype, 'placement', [_dec7, _dec8], {
     enumerable: true,
     initializer: function initializer() {
       return 'bottom';
     }
-  }), _descriptor7 = _applyDecoratedDescriptor(_class2.prototype, 'popperContainer', [_dec10, _dec11], {
+  }), _descriptor6 = _applyDecoratedDescriptor(_class2.prototype, 'popperContainer', [_dec9, _dec10], {
     enumerable: true,
     initializer: function initializer() {
       return '.ember-application';
     }
-  }), _descriptor8 = _applyDecoratedDescriptor(_class2.prototype, 'popperTarget', [_argument.argument, _dec12], {
+  }), _descriptor7 = _applyDecoratedDescriptor(_class2.prototype, 'popperTarget', [_argument.argument, _dec11], {
+    enumerable: true,
+    initializer: function initializer() {
+      return null;
+    }
+  }), _descriptor8 = _applyDecoratedDescriptor(_class2.prototype, 'registerAPI', [_argument.argument, _dec12], {
     enumerable: true,
     initializer: function initializer() {
       return null;
@@ -85061,7 +85241,7 @@ createDeprecatedModule('resolver');
   "use strict";
 
   exports.__esModule = true;
-  exports.default = Ember.HTMLBars.template({ "id": "q2HT5NdU", "block": "{\"symbols\":[\"&default\"],\"statements\":[[1,[25,\"unbound\",[[20,[\"_parentFinder\"]]],null],false],[0,\"\\n\\n\"],[4,\"if\",[[20,[\"renderInPlace\"]]],null,{\"statements\":[[0,\"  \"],[6,\"div\"],[10,\"id\",[18,\"id\"],null],[10,\"class\",[18,\"class\"],null],[10,\"role\",[18,\"ariaRole\"],null],[7],[0,\"\\n    \"],[11,1,[[25,\"hash\",null,[[\"update\",\"scheduleUpdate\",\"enableEventListeners\",\"disableEventListeners\"],[[25,\"action\",[[19,0,[]],\"update\"],null],[25,\"action\",[[19,0,[]],\"scheduleUpdate\"],null],[25,\"action\",[[19,0,[]],\"enableEventListeners\"],null],[25,\"action\",[[19,0,[]],\"disableEventListeners\"],null]]]]]],[0,\"\\n  \"],[8],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\n\"],[4,\"-in-element\",[[20,[\"_popperContainer\"]]],null,{\"statements\":[[0,\"    \"],[6,\"div\"],[10,\"id\",[18,\"id\"],null],[10,\"class\",[18,\"class\"],null],[10,\"role\",[18,\"ariaRole\"],null],[7],[0,\"\\n      \"],[11,1,[[25,\"hash\",null,[[\"update\",\"scheduleUpdate\",\"enableEventListeners\",\"disableEventListeners\"],[[25,\"action\",[[19,0,[]],\"update\"],null],[25,\"action\",[[19,0,[]],\"scheduleUpdate\"],null],[25,\"action\",[[19,0,[]],\"enableEventListeners\"],null],[25,\"action\",[[19,0,[]],\"disableEventListeners\"],null]]]]]],[0,\"\\n    \"],[8],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]}]],\"hasEval\":false}", "meta": { "moduleName": "ember-popper/templates/components/ember-popper.hbs" } });
+  exports.default = Ember.HTMLBars.template({ "id": "+b/JYMmF", "block": "{\"symbols\":[\"&default\"],\"statements\":[[1,[25,\"unbound\",[[20,[\"_parentFinder\"]]],null],false],[0,\"\\n\\n\"],[4,\"if\",[[20,[\"renderInPlace\"]]],null,{\"statements\":[[0,\"  \"],[6,\"div\"],[10,\"id\",[18,\"id\"],null],[10,\"class\",[18,\"class\"],null],[10,\"role\",[18,\"ariaRole\"],null],[7],[0,\"\\n    \"],[11,1,[[25,\"hash\",null,[[\"disableEventListeners\",\"enableEventListeners\",\"scheduleUpdate\",\"update\"],[[25,\"action\",[[19,0,[]],\"disableEventListeners\"],null],[25,\"action\",[[19,0,[]],\"enableEventListeners\"],null],[25,\"action\",[[19,0,[]],\"scheduleUpdate\"],null],[25,\"action\",[[19,0,[]],\"update\"],null]]]]]],[0,\"\\n  \"],[8],[0,\"\\n\"]],\"parameters\":[]},{\"statements\":[[0,\"\\n\"],[4,\"-in-element\",[[20,[\"_popperContainer\"]]],null,{\"statements\":[[0,\"    \"],[6,\"div\"],[10,\"id\",[18,\"id\"],null],[10,\"class\",[18,\"class\"],null],[10,\"role\",[18,\"ariaRole\"],null],[7],[0,\"\\n      \"],[11,1,[[25,\"hash\",null,[[\"disableEventListeners\",\"enableEventListeners\",\"scheduleUpdate\",\"update\"],[[25,\"action\",[[19,0,[]],\"disableEventListeners\"],null],[25,\"action\",[[19,0,[]],\"enableEventListeners\"],null],[25,\"action\",[[19,0,[]],\"scheduleUpdate\"],null],[25,\"action\",[[19,0,[]],\"update\"],null]]]]]],[0,\"\\n    \"],[8],[0,\"\\n\"]],\"parameters\":[]},null]],\"parameters\":[]}]],\"hasEval\":false}", "meta": { "moduleName": "ember-popper/templates/components/ember-popper.hbs" } });
 });
 ;define('ember-raf-scheduler/index', ['exports'], function (exports) {
   'use strict';

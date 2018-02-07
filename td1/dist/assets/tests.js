@@ -10,6 +10,26 @@ define('td1/tests/app.lint-test', [], function () {
     assert.ok(true, 'app.js should pass ESLint\n\n');
   });
 
+  QUnit.test('helpers/calcreduc.js', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'helpers/calcreduc.js should pass ESLint\n\n');
+  });
+
+  QUnit.test('helpers/format-currency.js', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'helpers/format-currency.js should pass ESLint\n\n');
+  });
+
+  QUnit.test('helpers/format-percent.js', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'helpers/format-percent.js should pass ESLint\n\n');
+  });
+
+  QUnit.test('helpers/plural.js', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'helpers/plural.js should pass ESLint\n\n');
+  });
+
   QUnit.test('resolver.js', function (assert) {
     assert.expect(1);
     assert.ok(true, 'resolver.js should pass ESLint\n\n');
@@ -27,7 +47,7 @@ define('td1/tests/app.lint-test', [], function () {
 
   QUnit.test('routes/ex2.js', function (assert) {
     assert.expect(1);
-    assert.ok(false, 'routes/ex2.js should pass ESLint\n\n3:9 - \'computed\' is defined but never used. (no-unused-vars)\n8:7 - \'Service\' is assigned a value but never used. (no-unused-vars)\n9:13 - \'arrayOf\' is not defined. (no-undef)\n10:3 - Call this._super(...arguments) in init hook (ember/require-super-in-init)\n10:18 - \'services\' is assigned a value but never used. (no-unused-vars)');
+    assert.ok(false, 'routes/ex2.js should pass ESLint\n\n3:9 - \'computed\' is defined but never used. (no-unused-vars)\n6:16 - Use import { computed } from \'@ember/object\'; instead of using Ember.computed (ember/new-module-imports)\n6:16 - \'Ember\' is not defined. (no-undef)\n9:15 - Use import { computed } from \'@ember/object\'; instead of using Ember.computed (ember/new-module-imports)\n9:15 - \'Ember\' is not defined. (no-undef)\n15:13 - Use import { computed } from \'@ember/object\'; instead of using Ember.computed (ember/new-module-imports)\n15:13 - \'Ember\' is not defined. (no-undef)\n21:14 - Use import { computed } from \'@ember/object\'; instead of using Ember.computed (ember/new-module-imports)\n21:14 - \'Ember\' is not defined. (no-undef)\n64:9 - Use import { set } from \'@ember/object\'; instead of using Ember.set (ember/new-module-imports)\n64:9 - \'Ember\' is not defined. (no-undef)');
   });
 
   QUnit.test('routes/test.js', function (assert) {
@@ -100,6 +120,86 @@ define('td1/tests/helpers/start-app', ['exports', 'td1/app', 'td1/config/environ
     });
   }
 });
+define('td1/tests/integration/helpers/calcreduc-test', ['ember-qunit'], function (_emberQunit) {
+  'use strict';
+
+  (0, _emberQunit.moduleForComponent)('calcreduc', 'helper:calcreduc', {
+    integration: true
+  });
+
+  // Replace this with your real tests.
+  (0, _emberQunit.test)('it renders', function (assert) {
+    this.set('inputValue', '1234');
+
+    this.render(Ember.HTMLBars.template({
+      "id": "Mp8SdNcA",
+      "block": "{\"symbols\":[],\"statements\":[[1,[25,\"calcreduc\",[[20,[\"inputValue\"]]],null],false]],\"hasEval\":false}",
+      "meta": {}
+    }));
+
+    assert.equal(this.$().text().trim(), '1234');
+  });
+});
+define('td1/tests/integration/helpers/format-currency-test', ['ember-qunit'], function (_emberQunit) {
+  'use strict';
+
+  (0, _emberQunit.moduleForComponent)('format-currency', 'helper:format-currency', {
+    integration: true
+  });
+
+  // Replace this with your real tests.
+  (0, _emberQunit.test)('it renders', function (assert) {
+    this.set('inputValue', '1234');
+
+    this.render(Ember.HTMLBars.template({
+      "id": "kOk0Pol8",
+      "block": "{\"symbols\":[],\"statements\":[[1,[25,\"format-currency\",[[20,[\"inputValue\"]]],null],false]],\"hasEval\":false}",
+      "meta": {}
+    }));
+
+    assert.equal(this.$().text().trim(), '1234');
+  });
+});
+define('td1/tests/integration/helpers/format-percent-test', ['ember-qunit'], function (_emberQunit) {
+  'use strict';
+
+  (0, _emberQunit.moduleForComponent)('format-percent', 'helper:format-percent', {
+    integration: true
+  });
+
+  // Replace this with your real tests.
+  (0, _emberQunit.test)('it renders', function (assert) {
+    this.set('inputValue', '1234');
+
+    this.render(Ember.HTMLBars.template({
+      "id": "rDbjuUhA",
+      "block": "{\"symbols\":[],\"statements\":[[1,[25,\"format-percent\",[[20,[\"inputValue\"]]],null],false]],\"hasEval\":false}",
+      "meta": {}
+    }));
+
+    assert.equal(this.$().text().trim(), '1234');
+  });
+});
+define('td1/tests/integration/helpers/plural-test', ['ember-qunit'], function (_emberQunit) {
+  'use strict';
+
+  (0, _emberQunit.moduleForComponent)('plural', 'helper:plural', {
+    integration: true
+  });
+
+  // Replace this with your real tests.
+  (0, _emberQunit.test)('it renders', function (assert) {
+    this.set('inputValue', '1234');
+
+    this.render(Ember.HTMLBars.template({
+      "id": "dOCZQrcf",
+      "block": "{\"symbols\":[],\"statements\":[[1,[25,\"plural\",[[20,[\"inputValue\"]]],null],false]],\"hasEval\":false}",
+      "meta": {}
+    }));
+
+    assert.equal(this.$().text().trim(), '1234');
+  });
+});
 define('td1/tests/test-helper', ['td1/app', 'td1/config/environment', '@ember/test-helpers', 'ember-qunit'], function (_app, _environment, _testHelpers, _emberQunit) {
   'use strict';
 
@@ -125,6 +225,26 @@ define('td1/tests/tests.lint-test', [], function () {
   QUnit.test('helpers/start-app.js', function (assert) {
     assert.expect(1);
     assert.ok(true, 'helpers/start-app.js should pass ESLint\n\n');
+  });
+
+  QUnit.test('integration/helpers/calcreduc-test.js', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'integration/helpers/calcreduc-test.js should pass ESLint\n\n');
+  });
+
+  QUnit.test('integration/helpers/format-currency-test.js', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'integration/helpers/format-currency-test.js should pass ESLint\n\n');
+  });
+
+  QUnit.test('integration/helpers/format-percent-test.js', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'integration/helpers/format-percent-test.js should pass ESLint\n\n');
+  });
+
+  QUnit.test('integration/helpers/plural-test.js', function (assert) {
+    assert.expect(1);
+    assert.ok(true, 'integration/helpers/plural-test.js should pass ESLint\n\n');
   });
 
   QUnit.test('test-helper.js', function (assert) {

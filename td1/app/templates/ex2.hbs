@@ -1,1 +1,36 @@
+<div class="list-group">
+  <div class="list-group-item">
+    <div class="list-group-item-heading">
+      {{plural model.countActive "aucun service sélectionné" "un service sélectionné" "services sélectionnés"}}
+    </div>
+  </div>
+  {{#each model.services as |service|}}
+  <div class="list-groupe-item
+    {{if service.active 'active' ''}}" {{action "toggleActive" service}}>
+    {{service.name}}
+    <span class="label label-default" class="badge">{{format-currency service.price}}</span>
+  </div>
+    {{/each}}
+  <div class="list-group-item-item list-group-item-info">
+    <span class="badge"> total : {{format-currency model.sumActives}}</span>
+  </div>
+  <div class="list-groupe-item">
+    <div class="input-group">
+      <span class="input-group-addon">
+        <input type="checkbox" aria-label="..."/>
+      </span>
+     {{input value=model.promo type="text"}}
+    </div>
+  </div>
+  <div class="list-groupe-item">
+    {{format-percent model.txRemise}}
+  </div>
+  <div class="list-groupe-item">
+    Montant de la réduction {{ format-currency (calcreduc model.sumActives model.txRemise)}}
+  </div>
+  <div class="list-groupe-item">
+    Montant final {{format-currency model.sumReduit}}
+  </div>
+</div>
+
 {{outlet}}
