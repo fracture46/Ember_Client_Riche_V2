@@ -1,0 +1,38 @@
+Sélectionnez vos produits
+<div class="row">
+  <div class="col">
+    Produits disponibles :
+    {{multi-select elements=model.dispoItems selectedIds=model.selectedDispoItemsIds
+                   dblClick="dblClick"}}
+    {{model.includedItems.length }} Produit(s) sélectionné(s)
+  </div>
+  <div class="col-1">
+    <button {{action "addTo" model.dispoItems model.includedItems model.selectedDispoItems}}
+      disabled="{{unless model.selectedDispoItemsIds.length 'disabled' ''}}" class="btn btn-primary btn-fluid">
+      {{fa-icon "step-forward"}}
+    </button>
+    <button {{action "addTo" model.dispoItems model.includedItems model.dispoItems}}
+      disabled="{{unless model.dispoItems.length 'disabled' ''}}" class="btn btn-primary btn-fluid">
+      {{fa-icon "fast-forward"}}
+    </button>
+    <button {{action "removeFrom" model.includedItems model.dispoItems model.selectedIncludedItems}}
+      disabled="{{unless model.selectedIncludedItems.length 'disabled' ''}}" class="btn btn-primary btn-fluid">
+      {{fa-icon "step-backward"}}
+    </button>
+    <button {{action "removeFrom" model.includedItems model.dispoItems model.includedItems}}
+      disabled="{{unless model.includedItems.length 'disabled' ''}}" class="btn btn-primary btn-fluid">
+      {{fa-icon "fast-backward"}}
+    </button>
+  </div>
+  <div class="col">
+    Produits sélectionnés :
+    {{multi-select elements=model.includedItems selectedIds=model.selectedIncludedItemsIds}}
+  </div>
+</div>
+<div class="">
+  Etape suivante
+  <button {{action "" }}class="btn btn-primary btn-fluid">
+    {{fa-icon "step-forward"}}
+  </button>
+</div>
+{{outlet}}
