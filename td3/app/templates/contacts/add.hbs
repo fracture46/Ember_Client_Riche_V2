@@ -1,0 +1,8 @@
+<form>
+  <div class="form-group">
+    <label for="nom">Nom</label>
+    {{input value=model.nom id="nom"}}
+  </div>
+</form>
+<button {{action "addContact" model}}>Valider<</button>
+{{outlet}}

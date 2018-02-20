@@ -83,10 +83,9 @@ export default Route.extend({
     },
     dblClick:function(){
       let model=this.modelFor(this.routeName);
-      let objet = Ember.get(model,'selectedDispoItemsIds');
+      let objet = Ember.get(model,'selectedDispoItems');
       let dest = Ember.get(model, 'includedItems');
       let source = Ember.get(model, 'dispoItems');
-      debugger
       dest.pushObjects(objet);
       source.removeObjects(objet);
       Ember.set(model,'selectedDispoItemsIds',[]);
