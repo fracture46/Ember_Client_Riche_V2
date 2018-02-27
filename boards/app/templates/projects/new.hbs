@@ -1,0 +1,30 @@
+<div class="ui message">
+  <i class="large icones">
+    <i class="user icon"></i>
+    <i class="inverted corner add icon"></i>
+  </i>
+  <div class="header">Project</div>
+  <p>Création d'un projet</p>
+</div>
+<form class="ui form">
+  <div class="field">
+    <label for="name">Name</label>
+    {{input id="name" value=model.name}}
+  </div>
+  <div class="field">
+    <label for="description">Description</label>
+    {{input id="description" value=model.description}}
+  </div>
+  <div class="field">
+    <label for="startDate">StartDate</label>
+    {{input id="startDate" value=model.startDate}}
+    <label for="dueDate">DueDate</label>
+    {{input id="dueDate" value=model.dueDate}}
+  </div>
+</form>
+<div class="ui segment">
+  <a {{action "save" model}} class="ui position button">Okay</a>
+  <a class="ui button">Cancel</a>
+</div>
+
+{{outlet}}
