@@ -1,0 +1,7 @@
+<div>
+  <i class="icon black question alternate"></i> Confirmez la suppression de '{{model.identity}}' ?
+  <a {{action "delete" model}} class="ui positive position button">Confirmer</a>
+  {{#link-to "developer" class="ui negative position button"}}Annuler{{/link-to}}
+</div>
+
+{{outlet}}
