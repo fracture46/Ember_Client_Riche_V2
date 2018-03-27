@@ -1,0 +1,45 @@
+{{#ui-form oldValue=model.story  newValue=model.data validation="save" cancel="cancel" bigIcon='file' smallIcon='plus' header="Story" description='Editing a story in project'}}
+
+  <div class="field">
+    <label for="code">Code</label>
+    {{input id="code" placeholder="Code" value=model.data.code}}
+  </div>
+  <div class="field">
+    <label for="description">Description</label>
+    {{textarea id="description" placeholder="Description" value=model.data.description}}
+  </div>
+  <div class="field">
+    <label for="developer">Developer</label>
+    {{multi-select selected=model.data.developer name="developer" placeholder="Developer" elements=model.developers selectedElements=model.developer}}
+  </div>
+  <div class="two fields">
+    <div class="field">
+
+    {{#ui-dropdown class="fluid multiple selection" selected=model.data.tags onChange=(action (mut model.data.tags)) as |execute mapper|}}
+    <i class="dropdown icon"></i>
+    <div class="default text">Choose tags...</div>
+    <div class="menu">
+      {{#each model.tags as |tag|}}
+        <div class="item" data-value="{{map-value mapper tag}}">
+          <div class="ui {{tag.color}} empty circular label"></div>
+          {{tag.title}}
+        </div>
+      {{/each}}
+    </div>
+    {{/ui-dropdown}}
+
+    </div>
+    <div class="field">
+      <div class="ui action input">
+        {{input placeholder="tag..." value=model.tag.title}}
+        <select onchange={{action (mut model.tag.color) value="target.value"}} class="ui compact selection dropdown">
+        {{#each model.colors as |color|}}
+          <option value="{{color}}">{{color}}</option>
+        {{/each}}
+        </select>
+        <a class="ui button" {{action "newTag" model.tag model}}>New tag</a>
+      </div>
+    </div>
+  </div>
+{{/ui-form}}
+{{outlet}}

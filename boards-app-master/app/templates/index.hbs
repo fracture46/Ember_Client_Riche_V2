@@ -1,3 +1,8 @@
 <div class="ui segment">Index</div>
+<div class="ui grid">
+  {{#each model.models as |models|}}
+    <div class="eight wide column" value="{{models.modelClass.name}} {{models.modelClass.length}}"></div>
+  {{/each}}
 
+</div>
 {{outlet}}

@@ -21,6 +21,7 @@ Router.map(function() {
 
   this.route('story', function() {
     this.route('new', {path: 'new/:project_id'});
+    this.route('edit', {path: 'edit/:story_id'});
   });
   this.route('tags', function() {
     this.route('new');
