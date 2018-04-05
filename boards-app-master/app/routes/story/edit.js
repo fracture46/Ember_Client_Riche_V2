@@ -6,6 +6,7 @@ export default Route.extend({
   model(params){
     return new RSVP.hash({
       story: this.get('store').findRecord('story',params.story_id),
+      //project: this.get('store').findRecord('project',params.story_id),
       developers: this.get('store').findAll('developer'),
       idDeveloper:[],
       idTags:[],
@@ -28,22 +29,20 @@ export default Route.extend({
       story.set('description',data.description);
 
       let model = this.modelFor(this.routeName);
+      //let project=Ember.get(model,'project');
       //let idDeveloper = get(model, 'idDeveloper');
       //let dev = get(model, 'developers').find('_id', model.idDeveloper);
-      let dev = this.get('store').peekRecord('developer', model.idDeveloper);
+      let dev = this.get('store').peekRecord('developer', data.idDeveloper);
       story.set('developer',dev);
 
       //Ember.set(story,'step',data.step);
       //set(story,'project',data.project);
       set(story,'tags',get(data,'tags'));
-      debugger;
       //set(story,'tasks',get(data,'tasks'));
+      debugger;
       story.save().then(()=>{
-        this.transitionTo("story");
+        this.transitionTo("project",project);
       })
-    },
-    cancel(){
-      this.transitionTo("story");
     },
     cancel(){
       let model = this.modelFor(this.routeName);
